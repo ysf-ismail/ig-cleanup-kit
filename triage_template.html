@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Following Triage</title>
+<style>
+:root{--bg:#0e0f13;--panel:#171922;--panel-2:#1e2130;--line:#2a2e3f;--txt:#e8eaf2;
+--dim:#8a90a6;--accent:#5b8cff;--keep:#2ecc8f;--cut:#ff5f6d;--warn:#ffb84d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;padding:0 0 118px}
+.wrap{max-width:1700px;margin:0 auto;padding:0 14px}
+header{position:sticky;top:0;z-index:30;background:rgba(14,15,19,.94);
+backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:13px 0 11px}
+h1{font-size:17px;margin:0 0 2px;letter-spacing:-.2px}
+.sub{color:var(--dim);font-size:12px;margin:0}
+.counter{display:flex;align-items:baseline;gap:10px;margin-top:9px}
+.counter .big{font-size:29px;font-weight:700;letter-spacing:-.6px}
+.counter .goal{font-size:13px;color:var(--dim)}
+.bar{height:6px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--keep));width:0;transition:.25s}
+.stats{display:flex;gap:8px;margin:16px 0 13px;flex-wrap:wrap}
+.st{flex:1;min-width:104px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.st b{display:block;font-size:20px;letter-spacing:-.4px}
+.st span{font-size:10.5px;color:var(--dim)}
+.st.g b{color:var(--keep)} .st.r b{color:var(--cut)} .st.y b{color:var(--warn)}
+.ctl{display:flex;gap:11px;align-items:center;margin-bottom:15px;background:var(--panel);
+border:1px solid var(--line);border-radius:10px;padding:9px 13px;flex-wrap:wrap}
+.ctl>span{font-size:11px;color:var(--dim);font-weight:600}
+.ctl b{font-size:11px;color:var(--txt);min-width:42px}
+#zoom{flex:1;min-width:140px;max-width:280px;accent-color:var(--accent);height:4px;cursor:pointer}
+.fbtn{background:var(--panel-2);border:1px solid var(--line);color:var(--dim);font-size:11px;
+padding:6px 11px;border-radius:7px;cursor:pointer;font-weight:600}
+.fbtn:hover{color:var(--txt)}
+.fbtn.on{background:#16233f;border-color:var(--accent);color:#bcd0ff}
+.sep{width:1px;height:20px;background:var(--line)}
+.sec{margin-bottom:24px}
+.sh{display:flex;align-items:center;gap:9px;margin:0 0 5px;flex-wrap:wrap}
+.sh h2{font-size:14px;margin:0;letter-spacing:-.1px}
+.sh .cnt{font-size:11px;color:var(--dim)}
+.sh .chip{font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);
+background:var(--panel-2);color:var(--dim);font-weight:600}
+.sh .chip.g{color:var(--keep);border-color:#1a4034;background:#0f2620}
+.sh .chip.y{color:var(--warn);border-color:#4a3a1a;background:#241d10}
+.sh .act{margin-left:auto;display:flex;gap:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px}
+.cell{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:7px 4px;
+text-align:center;cursor:pointer;transition:.1s;position:relative;user-select:none}
+.cell:hover{border-color:var(--dim);transform:translateY(-2px)}
+.cell img{width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--panel-2);display:block;margin:0 auto 5px}
+.cell .un{font-size:9px;font-weight:700;line-height:1.2;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .nm{font-size:8.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell .yr{font-size:8px;color:var(--dim);opacity:.6;margin-top:2px;white-space:nowrap;overflow:hidden}
+.cell.cut{border-color:var(--cut);background:#2a1016}
+.cell.cut img{opacity:.3;filter:grayscale(1)}
+.cell.cut::after{content:"\2715";position:absolute;top:3px;right:5px;color:var(--cut);font-size:12px;font-weight:700}
+.cell.dmd{border-color:#22483a}
+.cell .dm{position:absolute;top:3px;left:4px;font-size:9px;color:var(--keep);font-weight:700}
+.cell .ow{position:absolute;bottom:3px;right:5px;font-size:8px;color:var(--warn);opacity:.85}
+.cell.hide{display:none}
+#peek{position:fixed;z-index:200;pointer-events:none;opacity:0;transition:opacity .1s;
+background:var(--panel-2);border:1px solid var(--accent);border-radius:14px;padding:12px;
+box-shadow:0 18px 48px rgba(0,0,0,.72);width:216px;text-align:center}
+#peek.on{opacity:1}
+#peek img{width:190px;height:190px;border-radius:12px;object-fit:cover;display:block;margin:0 auto 9px;background:var(--panel)}
+#peek .pu{font-size:13px;font-weight:700;word-break:break-all;line-height:1.25}
+#peek .pn{font-size:12px;color:var(--dim);margin-top:3px}
+#peek .pm{font-size:11px;color:var(--dim);margin-top:6px;opacity:.85;line-height:1.45}
+#peek .pg{color:var(--keep);font-weight:700}
+#peek .pc{font-size:11px;color:var(--cut);font-weight:700;margin-top:6px}
+footer{position:fixed;bottom:0;left:0;right:0;background:rgba(14,15,19,.96);
+backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:11px 14px;z-index:30}
+.fin{max-width:1700px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fin .txt{font-size:12px;color:var(--dim);flex:1;min-width:170px}
+.fin .txt b{color:var(--txt)}
+footer button{background:var(--panel-2);border:1px solid var(--line);color:var(--txt);
+font-size:12px;font-weight:700;padding:10px 15px;border-radius:9px;cursor:pointer}
+footer button.pri{background:#123528;border-color:#1f5c44;color:#6ee7b7}
+dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);
+border-radius:14px;padding:20px;max-width:560px;width:92%}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+textarea{width:100%;height:230px;background:var(--bg);color:var(--txt);border:1px solid var(--line);
+border-radius:10px;padding:11px;font-family:ui-monospace,monospace;font-size:11.5px;margin-top:10px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Following triage</h1>
+  <p class="sub" id="subline"></p>
+  <div class="counter">
+    <span class="big" id="cur">0</span>
+    <span class="goal">following &middot; goal <span id="gl">0</span> &middot; <b id="need">0</b> more to cut</span>
+  </div>
+  <div class="bar"><i id="prog"></i></div>
+</div></header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+  <div class="ctl">
+    <span>Zoom</span>
+    <input type="range" id="zoom" min="48" max="190" step="2" value="72">
+    <b id="zlbl">72px</b>
+    <div class="sep"></div>
+    <span>Show</span>
+    <button class="fbtn on" id="f_all"  onclick="setF('all')">All</button>
+    <button class="fbtn"    id="f_nodm" onclick="setF('nodm')">Never messaged</button>
+    <button class="fbtn"    id="f_ow"   onclick="setF('ow')">No follow-back</button>
+    <button class="fbtn"    id="f_mut"  onclick="setF('mut')">Mutuals</button>
+  </div>
+  <div id="secs"></div>
+</div>
+
+<div id="peek"></div>
+
+<footer><div class="fin">
+  <div class="txt"><b id="fc">0</b> marked &middot; <span id="fr">0</span> to go &middot; lands you at <b id="fl">0</b></div>
+  <button onclick="showList()">View list</button>
+  <button class="pri" onclick="dl()">Download</button>
+</div></footer>
+
+<dialog id="dlg">
+  <b style="font-size:14px">Unfollow list</b>
+  <p style="font-size:12px;color:var(--dim);margin:6px 0 0">Hit Download, then hand the file back to Claude.</p>
+  <textarea id="box" readonly></textarea>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button onclick="cp()" style="flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--txt);padding:10px;border-radius:9px;cursor:pointer;font-weight:700">Copy</button>
+    <button onclick="document.getElementById('dlg').close()" style="background:var(--panel-2);border:1px solid var(--line);color:var(--dim);padding:10px 14px;border-radius:9px;cursor:pointer">Close</button>
+  </div>
+</dialog>
+
+<script>
+const PAYLOAD = __DATA__;
+const DATA = PAYLOAD.rows;
+const META = PAYLOAD.meta || {};
+const START = DATA.length;
+const GOAL  = META.goal || Math.round(START * 0.7);
+const STORE = 'igtriage_' + (META.account || 'me');
+
+/* sections: grouped by `tier` when present, otherwise one flat list */
+const TIER_LABEL = META.tierLabels || {};
+const TIERS = [...new Set(DATA.map(x => x.tier).filter(Boolean))];
+const SECS = TIERS.length
+  ? TIERS.map(t => [t, TIER_LABEL[t] || t])
+  : [[null, 'Everyone you follow']];
+
+const BY_U = {}; DATA.forEach(x => BY_U[x.u] = x);
+let cut = {}, filt = 'all';
+try { cut = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch(e){ cut = {}; }
+const $ = i => document.getElementById(i);
+const nCut = () => Object.keys(cut).length;
+const vis = x => filt === 'all' ? true
+  : filt === 'nodm' ? !x.dm
+  : filt === 'ow'   ? !x.m
+  : x.m;
+
+function build(){
+  $('subline').textContent = START + ' accounts'
+    + (META.generated ? ' · ' + META.generated : '')
+    + ' · ' + DATA.filter(x => x.dm).length + ' you have messaged';
+  $('gl').textContent = GOAL;
+  $('secs').innerHTML = SECS.map(function(s){
+    const rows = s[0] === null ? DATA : DATA.filter(x => x.tier === s[0]);
+    if(!rows.length) return '';
+    const mut = rows.filter(x => x.m).length, dmd = rows.filter(x => x.dm).length;
+    const id = s[0] === null ? 'all' : s[0];
+    return '<div class="sec" id="s_' + id + '"><div class="sh"><h2>' + s[1] + '</h2>'
+      + '<span class="cnt">' + rows.length + '</span>'
+      + '<span class="chip g">' + mut + ' mutual</span>'
+      + '<span class="chip">' + (rows.length - mut) + ' one-way</span>'
+      + '<span class="chip y">' + dmd + ' messaged</span>'
+      + '<span class="act"><button class="fbtn" onclick="markAll(\'' + id + '\',1)">Mark visible</button>'
+      + '<button class="fbtn" onclick="markAll(\'' + id + '\',0)">Clear</button></span></div>'
+      + '<div class="grid">'
+      + rows.map(function(x){
+          return '<div class="cell' + (x.dm ? ' dmd' : '') + '" id="c_' + x.u + '"'
+            + ' onclick="tog(\'' + x.u + '\')"'
+            + ' onmouseenter="peek(event,\'' + x.u + '\')" onmouseleave="unpeek()" onmousemove="movePeek(event)">'
+            + (x.dm ? '<span class="dm">✓</span>' : '')
+            + (x.img ? '<img src="' + x.img + '" alt="" loading="lazy">' : '<img alt="">')
+            + '<div class="un">@' + x.u + '</div>'
+            + '<div class="nm">' + (x.n ? x.n.replace(/</g,'&lt;') : '&nbsp;') + '</div>'
+            + (x.d ? '<div class="yr">' + String(x.d).slice(0,4) + '</div>' : '')
+            + (x.m ? '' : '<span class="ow">→</span>')
+            + '</div>';
+        }).join('')
+      + '</div></div>';
+  }).join('');
+  paint();
+}
+
+function paint(){
+  DATA.forEach(function(x){
+    const el = $('c_' + x.u); if(!el) return;
+    el.classList.toggle('cut', !!cut[x.u]);
+    el.classList.toggle('hide', !vis(x));
+  });
+  SECS.forEach(function(s){
+    const id = s[0] === null ? 'all' : s[0];
+    const el = $('s_' + id); if(!el) return;
+    const rows = s[0] === null ? DATA : DATA.filter(x => x.tier === s[0]);
+    el.style.display = rows.some(vis) ? '' : 'none';
+  });
+  const n = nCut(), left = DATA.filter(x => !cut[x.u]);
+  $('cur').textContent = START - n;
+  $('need').textContent = Math.max(0, START - GOAL - n);
+  $('prog').style.width = Math.min(100, n / Math.max(1, START - GOAL) * 100) + '%';
+  $('fc').textContent = n;
+  $('fr').textContent = Math.max(0, START - GOAL - n);
+  $('fl').textContent = START - n;
+  $('stats').innerHTML =
+      stat(left.length, 'still following', '')
+    + stat(left.filter(x => x.m).length, 'mutual', 'g')
+    + stat(left.filter(x => !x.m).length, 'no follow-back', 'y')
+    + stat(left.filter(x => x.dm).length, 'you’ve messaged', 'g')
+    + stat(left.filter(x => !x.dm).length, 'never messaged', '')
+    + stat(n, 'marked to cut', 'r');
+  try { localStorage.setItem(STORE, JSON.stringify(cut)); } catch(e){}
+}
+function stat(v, l, c){ return '<div class="st ' + c + '"><b>' + v + '</b><span>' + l + '</span></div>'; }
+
+function tog(u){ if(cut[u]) delete cut[u]; else cut[u] = 1; paint(); }
+function markAll(id, on){
+  const rows = id === 'all' ? DATA : DATA.filter(x => x.tier === id);
+  rows.filter(vis).forEach(function(x){ if(on) cut[x.u] = 1; else delete cut[x.u]; });
+  paint();
+}
+function setF(f){
+  filt = f;
+  ['all','nodm','ow','mut'].forEach(function(k){ $('f_' + k).classList.toggle('on', k === f); });
+  paint();
+}
+function peek(e, u){
+  const x = BY_U[u]; if(!x) return;
+  const p = $('peek');
+  p.innerHTML = (x.img ? '<img src="' + x.img + '" alt="">' : '')
+    + '<div class="pu">@' + x.u + '</div>'
+    + (x.n ? '<div class="pn">' + x.n.replace(/</g,'&lt;') + '</div>' : '')
+    + '<div class="pm">' + (x.d ? 'followed ' + String(x.d).slice(0,4) + '<br>' : '')
+      + (x.m ? 'follows you back' : 'does NOT follow you back')
+      + '<br>' + (x.dm ? '<span class="pg">you’ve messaged them</span>' : 'never messaged')
+      + (x.priv ? '<br>private account' : '') + '</div>'
+    + (cut[x.u] ? '<div class="pc">MARKED FOR UNFOLLOW</div>' : '');
+  p.classList.add('on'); movePeek(e);
+}
+function movePeek(e){
+  const p = $('peek'); if(!p.classList.contains('on')) return;
+  const w = 236, h = p.offsetHeight || 320;
+  let L = e.clientX + 20, T = e.clientY - h / 2;
+  if(L + w > innerWidth) L = e.clientX - w;
+  if(T < 8) T = 8;
+  if(T + h > innerHeight - 8) T = innerHeight - h - 8;
+  p.style.left = L + 'px'; p.style.top = T + 'px';
+}
+function unpeek(){ $('peek').classList.remove('on'); }
+function setSize(px){
+  document.querySelectorAll('.grid').forEach(function(g){
+    g.style.gridTemplateColumns = 'repeat(auto-fill,minmax(' + px + 'px,1fr))';
+  });
+  const s = Math.round(px * 0.68);
+  document.querySelectorAll('.cell img').forEach(function(i){ i.style.width = s + 'px'; i.style.height = s + 'px'; });
+  $('zlbl').textContent = px + 'px';
+  const zr = $('zoom'); if(zr && +zr.value !== px) zr.value = px;
+  try { localStorage.setItem(STORE + '_size', px); } catch(e){}
+}
+function showList(){ $('box').value = Object.keys(cut).join('\n'); $('dlg').showModal(); }
+function cp(){ const t = $('box'); t.select(); document.execCommand('copy'); }
+function dl(){
+  const b = new Blob([Object.keys(cut).join('\n')], {type:'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+  a.download = 'unfollow_list.txt'; document.body.appendChild(a); a.click(); a.remove();
+}
+build();
+$('zoom').addEventListener('input', function(e){ setSize(+e.target.value); });
+let _z = 72; try { const p = localStorage.getItem(STORE + '_size'); if(p) _z = +p; } catch(e){}
+setSize(_z);
+document.addEventListener('scroll', unpeek, { passive: true });
+</script>
+</body>
+</html>

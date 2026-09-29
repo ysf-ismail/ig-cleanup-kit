@@ -1,0 +1,11 @@
+# Never commit collected Instagram data — it is other people's
+# usernames, real names and photos.
+ig_export.json
+*_export.json
+following.html
+followers*.html
+triage*.html
+!triage_template.html
+unfollow_list.txt
+*.zip
+__pycache__/
