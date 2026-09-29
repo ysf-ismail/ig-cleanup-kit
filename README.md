@@ -2,8 +2,8 @@
 
 Cut down your following and follower counts without losing people you actually know.
 
-Built from a real run: **1,222 → 487 followers, 825 → 524 following**, 736 followers
-removed and 301 unfollowed.
+Built from a real run on an account following ~800 people, where both counts were cut
+by more than half without losing a single real contact.
 
 ## What's here
 
@@ -40,8 +40,8 @@ never spoke to.
 
 **DM history is the friend detector.** If you've ever exchanged a message with
 someone, you know them. Nothing else comes close as a signal — not mutual-follow,
-not follower overlap. In the original run this protected 344 of 825 people
-automatically. Watch for false positives on businesses, where a DM means nothing.
+not follower overlap. In the original run it automatically protected around 40% of
+the accounts followed. Watch for false positives on businesses, where a DM means nothing.
 
 **Faces, not usernames.** Reviewing hundreds of people one at a time doesn't work;
 you can't recognise `_bxsma._` from the handle. A grid of profile photos you scan and
@@ -82,8 +82,8 @@ treat any non-JSON response as throttled and back off.
 Removing everyone who doesn't follow you back leaves you at exactly your **mutual
 count**. You can't go below that without cutting people you know.
 
-In the original run the goal was 500 followers and the mutual count was 753 — so the
-target was impossible until we accepted cutting mutuals. Work this number out first.
+In the original run the chosen target sat well below the mutual count, so it was
+impossible until cutting mutuals was accepted. Work this number out first.
 `build_triage.py` prints it and warns you if your goal sits below it.
 
 ## Two honest caveats
